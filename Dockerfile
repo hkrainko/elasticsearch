@@ -16,9 +16,13 @@ COPY --chmod=755 entrypoint-new.sh /usr/local/bin/entrypoint-new.sh
 # Switch to the root user
 USER 0
 
-# Install sudo and allow the elasticsearch user to run chown as root
-RUN apt-get update && apt-get install -y sudo && \
-    echo "elasticsearch ALL=(root) NOPASSWD: /bin/chown" > /etc/sudoers.d/elasticsearch
+# Install Kuromoji (Japanese) and SmartCN (Chinese) analyzers,
+# and setup sudo for elasticsearch user
+RUN elasticsearch-plugin install --batch analysis-kuromoji \
+ && elasticsearch-plugin install --batch analysis-smartcn \
+ && apt-get update && apt-get install -y sudo \
+ && echo "elasticsearch ALL=(root) NOPASSWD: /bin/chown" > /etc/sudoers.d/elasticsearch \
+ && rm -rf /var/lib/apt/lists/*
 
 # Switch back to the elasticsearch user as elasticsearch can only run as non-root
 USER 1000:0
